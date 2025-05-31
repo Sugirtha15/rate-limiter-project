@@ -22,7 +22,7 @@ This rate limiter monitors the number of requests made by a user for each API wi
 - Spring Boot 
 
 
-  1.Installation
+## 1.Installation
 Option 1: Add Source Files
 
 Download the source files from this repository
@@ -42,19 +42,18 @@ xml<dependency>
     <version>1.0.0</version>
 </dependency>
 
-2.Configuration 
+## 2.Configuration 
 The rate limiter supports:
-
 1.defaultLimit: Number of allowed requests per window if no API-specific limit is set.
 2.windowInSeconds: Duration of the time window for rate limiting.
 3.apiLimits: A map of API names to their specific request limits
 
-Configuration in Project:
+## Configuration in Project:
 server.port=8080
 spring.main.allow-bean-definition-overriding=true
 rate-limiter.defaultLimit=5
 rate-limiter.windowInSeconds=15
-# API specific limits (key = API name, value = limit)
+ API specific limits (key = API name, value = limit)
 rate-limiter.apiLimits.getQuote=1
 rate-limiter.apiLimits.anotherApi=10
 
@@ -76,7 +75,7 @@ If the time isn't from project means we set the default time 15 seconds.
         return new RateLimiterService(config, windowInSeconds);
     }
 
-3.RatelimiterService(logic class):
+## 3.RatelimiterService(logic class):
 The main logic  in RateLimiterService:
 
 1.Tracks requests per user per API using an in-memory map (ConcurrentHashMap)
@@ -84,7 +83,7 @@ The main logic  in RateLimiterService:
 3.Returns true if request is allowed, false if rate limit is exceeded
 
 
-3.Running Tests
+## 4.Running Tests
 Use Maven to run automated tests:
 mvn test
 
@@ -95,9 +94,9 @@ mvn test
 - `testDifferentApisDontShareLimits()`  
   Ensures that rate limits for different APIs are independent.
 
-4.Dependencies
+## 5.Dependencies
 
-## Dependencies
+ Dependencies
 
 - Spring Boot 2.x
 - Java 8+
