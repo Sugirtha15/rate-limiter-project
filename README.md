@@ -1,4 +1,4 @@
-# Java Rate Limiter
+# Rate Limiter
 
 A plug-and-play Java rate limiter library to control API request limits based on User + API combination.
 
