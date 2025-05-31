@@ -24,17 +24,16 @@ This rate limiter monitors the number of requests made by a user for each API wi
 
 ## 1.Installation
 Option 1: Add Source Files
+Download the source files from this repository.
+Add them to your project under the com.ratelimiter package.
+Inject and use the RateLimiterService in your API controller or service layer.
 
-Download the source files from this repository
-Add them to your project under the com.ratelimiter package
-Inject and use the `RateLimiterService` in your API controller or service layer
-
-Example:
 @Autowired
 private RateLimiterService rateLimiterService;
 
-Option 2: Maven Dependency
-<!-- Maven Dependency -->
+ Option 2: Maven Dependency
+If you have published the library to a Maven repository, add the following to your pom.xml:
+
 <dependency>
     <groupId>com.ratelimiter</groupId>
     <artifactId>rateLimiter</artifactId>
