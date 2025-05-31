@@ -33,7 +33,6 @@ Example:
 @Autowired
 private RateLimiterService rateLimiterService;
 
-
 Option 2: Maven Dependency
 application.properties
 xml<dependency>
@@ -44,11 +43,13 @@ xml<dependency>
 
 ## 2.Configuration 
 The rate limiter supports:
+
 1.defaultLimit: Number of allowed requests per window if no API-specific limit is set.
 2.windowInSeconds: Duration of the time window for rate limiting.
 3.apiLimits: A map of API names to their specific request limits
 
 ## Configuration in Project:
+application.properties file
 server.port=8080
 spring.main.allow-bean-definition-overriding=true
 rate-limiter.defaultLimit=5
@@ -67,8 +68,8 @@ public class RateLimiterPojo {
     // Getters, Setters, and logic...
 }
 
-Configuration class:
-If the time isn't from project means we set the default time 15 seconds.
+## Configuration class of Rate Limiter:
+If the windowInSeconds is not specified in the project configuration, a default value of 15 seconds is used.
   @Bean
     public RateLimiterService rateLimiterService(RateLimiterPojo config) {
         long windowInSeconds = config.getWindowInSeconds() > 0 ? config.getWindowInSeconds() : 15L;
@@ -83,26 +84,54 @@ The main logic  in RateLimiterService:
 3.Returns true if request is allowed, false if rate limit is exceeded
 
 
-## 4.Running Tests
+## 3.Running Tests
 Use Maven to run automated tests:
 mvn test
 
-- `testAllowRequestWithDefaultLimit()`  
-  Checks that requests to an API without a specific limit use the default limit.
-- `testDifferentUsersDontAffectEachOther()`  
-  Verifies that rate limits apply separately to different users.
-- `testDifferentApisDontShareLimits()`  
-  Ensures that rate limits for different APIs are independent.
+| Test Method                      | Description                                           |
+| -------------------------------- | ----------------------------------------------------- |
+| `testGetQuoteApiSpecificLimit()` | Verifies API-specific rate limit (`getQuote = 1`)     |
+| `testWindowReset()`              | Ensures limits reset after the configured time window |
+| `testNullParameters()`           | Handles null user/API inputs with proper exceptions   |
+| `testEmptyStrings()`             | Handles empty or whitespace-only inputs gracefully    |
+| `testConcurrentAccess()`         | Validates thread-safety with concurrent requests      |
+| `testMixedApiUsage()`            | Tests combination of specific and default limits      |
 
-## 5.Dependencies
 
- Dependencies
+## 4.Dependencies
+
+ Dependencies used:
 
 - Spring Boot 2.x
 - Java 8+
 - JUnit 5 (for unit testing)
 - Maven (for build and dependency management)
 
+## 5.how to integrate it into a Java/Spring Boot project:
 
+Example Usage:
 
+    @GetMapping("/quote")
+    public ResponseEntity<String> getQuote(@RequestParam String userId) {
 
+        boolean allowed = rateLimiterService.allowRequest(userId, API_NAME);
+
+        if (!allowed) {
+            return ResponseEntity.status(429).body("Too many requests - Rate limit exceeded");
+        }
+
+        String quote = quoteService.getRandomQuote();
+        return ResponseEntity.ok(quote);
+    }
+}
+
+   ## GET /api/quote?userId=user123
+Returns a random quote. Rate limited per user.
+
+Success (200 OK):
+"Believe in yourself."
+
+Rate Limit Exceeded (429):
+"Too many requests - Rate limit exceeded"
+
+ 
