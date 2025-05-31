@@ -3,12 +3,11 @@ package com.ratelimiter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import com.ratelimiter.RateLimiterService;
-import com.ratelimiter.RateLimiterPojo;
-
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class RateLimiterServiceTest {
 
@@ -28,24 +27,98 @@ public class RateLimiterServiceTest {
     }
 
     @Test
-    void testAllowRequestWithDefaultLimit() {
-        assertTrue(rateLimiterService.allowRequest("user2", "nonConfiguredApi"));
-        assertTrue(rateLimiterService.allowRequest("user2", "nonConfiguredApi"));
-        assertFalse(rateLimiterService.allowRequest("user2", "nonConfiguredApi")); 
+    void testGetQuoteApiSpecificLimit() {
+        assertDoesNotThrow(() -> assertTrue(rateLimiterService.allowRequest("user1", "getQuote")));
+
+        assertThrows(RateLimitExceededException.class, () -> {
+            rateLimiterService.allowRequest("user1", "getQuote");
+        });
     }
 
     @Test
-    void testDifferentUsersDontAffectEachOther() {
-        assertTrue(rateLimiterService.allowRequest("user1", "getQuote"));
-        assertTrue(rateLimiterService.allowRequest("user2", "getQuote")); 
+    void testWindowReset() throws InterruptedException {
+        assertDoesNotThrow(() -> assertTrue(rateLimiterService.allowRequest("user1", "getQuote")));
+
+        assertThrows(RateLimitExceededException.class, () -> {
+            rateLimiterService.allowRequest("user1", "getQuote");
+        });
+
+        // Wait for window to expire (11 seconds)
+        Thread.sleep(11000);
+
+        assertDoesNotThrow(() -> assertTrue(rateLimiterService.allowRequest("user1", "getQuote")));
     }
 
     @Test
-    void testDifferentApisDontShareLimits() {
-        assertTrue(rateLimiterService.allowRequest("user1", "searchQuote"));
-        assertTrue(rateLimiterService.allowRequest("user1", "searchQuote"));
-        assertTrue(rateLimiterService.allowRequest("user1", "searchQuote"));
-        assertFalse(rateLimiterService.allowRequest("user1", "searchQuote"));
+    void testNullParameters() {
+        assertThrows(IllegalArgumentException.class, () -> 
+            rateLimiterService.allowRequest(null, "getQuote"));
+
+        assertThrows(IllegalArgumentException.class, () -> 
+            rateLimiterService.allowRequest("user1", null));
     }
 
+    @Test
+    void testEmptyStrings() {
+        assertThrows(IllegalArgumentException.class, () -> 
+            rateLimiterService.allowRequest("", "getQuote"));
+
+        assertThrows(IllegalArgumentException.class, () -> 
+            rateLimiterService.allowRequest("user1", ""));
+
+        assertThrows(IllegalArgumentException.class, () -> 
+            rateLimiterService.allowRequest("   ", "getQuote")); // whitespace only
+    }
+
+    @Test
+    void testConcurrentAccess() throws InterruptedException {
+        final int threadCount = 5;
+        final CountDownLatch latch = new CountDownLatch(threadCount);
+        final AtomicInteger successCount = new AtomicInteger(0);
+
+        for (int i = 0; i < threadCount; i++) {
+            new Thread(() -> {
+                try {
+                    if (rateLimiterService.allowRequest("user1", "getQuote")) {
+                        successCount.incrementAndGet();
+                    }
+                } catch (RateLimitExceededException e) {
+                    // Expected when limit exceeded
+                } finally {
+                    latch.countDown();
+                }
+            }).start();
+        }
+
+        latch.await();
+
+        // Only 1 request should succeed for getQuote (limit = 1)
+        assertEquals(1, successCount.get());
+    }
+
+    @Test
+    void testMixedApiUsage() {
+        String userId = "testUser";
+
+        // Use getQuote (limit 1)
+        assertDoesNotThrow(() -> assertTrue(rateLimiterService.allowRequest(userId, "getQuote")));
+        assertThrows(RateLimitExceededException.class, () -> {
+            rateLimiterService.allowRequest(userId, "getQuote");
+        });
+
+        // Use searchQuote (limit 3)
+        assertDoesNotThrow(() -> assertTrue(rateLimiterService.allowRequest(userId, "searchQuote")));
+        assertDoesNotThrow(() -> assertTrue(rateLimiterService.allowRequest(userId, "searchQuote")));
+        assertDoesNotThrow(() -> assertTrue(rateLimiterService.allowRequest(userId, "searchQuote")));
+        assertThrows(RateLimitExceededException.class, () -> {
+            rateLimiterService.allowRequest(userId, "searchQuote");
+        });
+
+        // Use default API limit 2
+        assertDoesNotThrow(() -> assertTrue(rateLimiterService.allowRequest(userId, "otherApi")));
+        assertDoesNotThrow(() -> assertTrue(rateLimiterService.allowRequest(userId, "otherApi")));
+        assertThrows(RateLimitExceededException.class, () -> {
+            rateLimiterService.allowRequest(userId, "otherApi");
+        });
+    }
 }
