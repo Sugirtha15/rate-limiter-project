@@ -45,46 +45,53 @@ If you have published the library to a Maven repository, add the following to yo
 The rate limiter supports:
 
 1.defaultLimit: Number of allowed requests per window if no API-specific limit is set.
+
 2.windowInSeconds: Duration of the time window for rate limiting.
+
 3.apiLimits: A map of API names to their specific request limits
 
-## Configuration in Project:
-application.properties file
+Configuration in Project
+application.properties 
 server.port=8080
 spring.main.allow-bean-definition-overriding=true
+
+# Rate limiter settings
 rate-limiter.defaultLimit=5
 rate-limiter.windowInSeconds=15
- API specific limits (key = API name, value = limit)
+
+# API-specific limits (key = API name, value = limit)
 rate-limiter.apiLimits.getQuote=1
 rate-limiter.apiLimits.anotherApi=10
+Mapping properties to RateLimiterPojo class
 
-These properties are mapped to the RateLimiterPojo class:
 @Component
 @ConfigurationProperties(prefix = "rate-limiter")
 public class RateLimiterPojo {
     private int defaultLimit;
     private long windowInSeconds;
     private Map<String, Integer> apiLimits;
-    // Getters, Setters, and logic...
+
+    // Getters and Setters
 }
+Rate Limiter Configuration Bean
+If windowInSeconds is not set, a default value of 15 seconds is used:
 
-## Configuration class of Rate Limiter:
-If the windowInSeconds is not specified in the project configuration, a default value of 15 seconds is used.
-  @Bean
-    public RateLimiterService rateLimiterService(RateLimiterPojo config) {
-        long windowInSeconds = config.getWindowInSeconds() > 0 ? config.getWindowInSeconds() : 15L;
-        return new RateLimiterService(config, windowInSeconds);
-    }
+##
+@Bean
+public RateLimiterService rateLimiterService(RateLimiterPojo config) {
+    long windowInSeconds = config.getWindowInSeconds() > 0 ? config.getWindowInSeconds() : 15L;
+    return new RateLimiterService(config, windowInSeconds);
+}
+ RateLimiterService main logic 
+Tracks requests per user per API using an in-memory map (ConcurrentHashMap).
 
-## 3.RatelimiterService(logic class):
-The main logic  in RateLimiterService:
+Resets counters after each time window expires.
 
-1.Tracks requests per user per API using an in-memory map (ConcurrentHashMap)
-2.Resets counter every time window
-3.Returns true if request is allowed, false if rate limit is exceeded
+Returns true if the request is allowed; otherwise, throws an exception or returns false when the rate limit is exceeded.
 
 
-## 3.Running Tests
+
+## 4.Running Tests
 Use Maven to run automated tests:
 mvn test
 
@@ -98,7 +105,7 @@ mvn test
 | `testMixedApiUsage()`            | Tests combination of specific and default limits      |
 
 
-## 4.Dependencies
+## 5.Dependencies
 
  Dependencies used:
 
@@ -107,7 +114,7 @@ mvn test
 - JUnit 5 (for unit testing)
 - Maven (for build and dependency management)
 
-## 5.how to integrate it into a Java/Spring Boot project:
+## 6.how to integrate it into a Java/Spring Boot project:
 
 Example Usage:
 
@@ -125,7 +132,7 @@ Example Usage:
     }
 }
 
-   ## GET /api/quote?userId=user123
+    GET /api/quote?userId=user123
 Returns a random quote. Rate limited per user.
 
 Success (200 OK):
