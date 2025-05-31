@@ -20,6 +20,12 @@ import org.springframework.stereotype.Service;
 	    }	
 	
 	    public boolean allowRequest(String userId, String api) {
+	    	
+	    	if (userId == null || userId.trim().isEmpty() || api == null || api.trim().isEmpty()) {
+	    	    throw new IllegalArgumentException("userId and apiName must not be empty or blank");
+	    	}
+	           
+
 	        String key = userId + ":" + api;
 	        Window window = requestMap.computeIfAbsent(key, k -> new Window(Instant.now().getEpochSecond(), 0));
 	        long currentTime = Instant.now().getEpochSecond();
@@ -36,7 +42,7 @@ import org.springframework.stereotype.Service;
 	                window.counter++;
 	                return true;
 	            } else {
-	                return false;
+	                throw new RateLimitExceededException("Rate limit exceeded for user " + userId + " on API " + api);
 	            }
 	        }
 	    }

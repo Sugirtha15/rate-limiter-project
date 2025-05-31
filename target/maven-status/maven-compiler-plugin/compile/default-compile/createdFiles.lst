@@ -1,5 +1,6 @@
-com\ratelimiter\RateLimiterService.class
 com\ratelimiter\RateLimiter.class
+com\ratelimiter\RateLimitExceededException.class
+com\ratelimiter\RateLimiterPojo.class
+com\ratelimiter\RateLimiterService.class
 com\ratelimiter\RateLimiterConfiguration.class
 com\ratelimiter\RateLimiterService$Window.class
-com\ratelimiter\RateLimiterPojo.class
