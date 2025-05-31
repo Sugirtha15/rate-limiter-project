@@ -50,16 +50,16 @@ The rate limiter supports:
 
 3.apiLimits: A map of API names to their specific request limits
 
-Configuration in Project
+# Configuration in Spring boot Project
 application.properties 
 server.port=8080
 spring.main.allow-bean-definition-overriding=true
 
-# Rate limiter settings
+ Rate limiter settings
 rate-limiter.defaultLimit=5
 rate-limiter.windowInSeconds=15
 
-# API-specific limits (key = API name, value = limit)
+ API-specific limits (key = API name, value = limit)
 rate-limiter.apiLimits.getQuote=1
 rate-limiter.apiLimits.anotherApi=10
 Mapping properties to RateLimiterPojo class
@@ -73,10 +73,11 @@ public class RateLimiterPojo {
 
     // Getters and Setters
 }
-Rate Limiter Configuration Bean
+
+## Rate Limiter Configuration Bean
 If windowInSeconds is not set, a default value of 15 seconds is used:
 
-##
+
 @Bean
 public RateLimiterService rateLimiterService(RateLimiterPojo config) {
     long windowInSeconds = config.getWindowInSeconds() > 0 ? config.getWindowInSeconds() : 15L;
