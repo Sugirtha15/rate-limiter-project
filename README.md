@@ -34,12 +34,13 @@ Example:
 private RateLimiterService rateLimiterService;
 
 Option 2: Maven Dependency
-application.properties
+<!-- Maven Dependency -->
 <dependency>
     <groupId>com.ratelimiter</groupId>
     <artifactId>rateLimiter</artifactId>
     <version>1.0.0</version>
 </dependency>
+
 
 ## 2.Configuration 
 The rate limiter supports:
