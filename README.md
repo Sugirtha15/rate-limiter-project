@@ -35,7 +35,7 @@ private RateLimiterService rateLimiterService;
 
 Option 2: Maven Dependency
 application.properties
-xml<dependency>
+<dependency>
     <groupId>com.ratelimiter</groupId>
     <artifactId>rateLimiter</artifactId>
     <version>1.0.0</version>
